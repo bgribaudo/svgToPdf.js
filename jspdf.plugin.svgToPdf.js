@@ -18,17 +18,10 @@
  * along with this file.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
- 
-  ;(function(jsPDFAPI) {
-'use strict'
 
-    jsPDFAPI.addSVG = function(element, x, y, options) {
-        'use strict'
+;(function(global, jsPDFAPI) {
+    'use strict'
 
-        options = (typeof(options) == 'undefined' ? {} : options);
-        options.x_offset = x;
-        options.y_offset = y;
-            
        var pdfSvgAttr = {
             // allowed attributes. all others are removed from the preview.
             g: ['stroke', 'fill', 'stroke-width'],
@@ -39,7 +32,7 @@
             text: ['x', 'y', 'font-size', 'font-family', 'text-anchor', 'font-weight', 'font-style', 'fill']
         };
 
-        var removeAttributes = function(node, attributes) {
+        function removeAttributes(node, attributes) {
             var toRemove = [];
             $.each(node.attributes, function(i, a) {
                 if(typeof(a) != 'undefined' && attributes.indexOf(a.name.toLowerCase()) == -1) {
@@ -50,9 +43,9 @@
             $.each(toRemove, function(i, a) {
                 node.removeAttribute(a.name);
             });	
-        }
+        };
         
-        var svgElementToPdf = function(element, pdf, options) {
+        function svgElementToPdf(element, pdf, options) {
             // pdf is a jsPDF object
             //console.log("options =", options);
             var remove = (typeof(options.removeInvalid) == 'undefined' ? false : options.removeInvalid);
@@ -206,9 +199,25 @@
                 }
             });
             return pdf;
-        };            
+        };
 
+    if(typeof module !== 'undefined') {
+        module.exports = svgElementToPdf; // NodeJS
+    } else if(!jsPDFAPI && typeof define !== 'undefined' && define.amd) {
+        define([], function() { // RequireJS
+            return svgElementToPdf;
+        });
+    } else { // Browser
+        global.svgElementToPdf = svgElementToPdf;
+    }
+
+    if (jsPDFAPI) jsPDFAPI.addSVG = function(element, x, y, options) {
+
+        options = (typeof(options) == 'undefined' ? {} : options);
+        options.x_offset = x;
+        options.y_offset = y;
+        
         svgElementToPdf(element, this, options);
         return this;
     };
-})(jsPDF.API);
+})(this, typeof jsPDF !== 'undefined' && jsPDF.API);
